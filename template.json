@@ -1,0 +1,177 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_WS_POC_name": {
+            "defaultValue": "WS-POC",
+            "type": "String"
+        },
+        "loadBalancers_LB_WSPOC_name": {
+            "defaultValue": "LB-WSPOC",
+            "type": "String"
+        },
+        "publicIPAddresses_LB_POC_IP_name": {
+            "defaultValue": "LB-POC-IP",
+            "type": "String"
+        },
+        "networkInterfaces_WS_POC_nic_5b28b914a2b14487ba12c9efd94d13c0_name": {
+            "defaultValue": "WS-POC-nic-5b28b914a2b14487ba12c9efd94d13c0",
+            "type": "String"
+        },
+        "publicIPAddresses_WS_POC_pip_76df8f4b287e43a795a0cb0f073b3208_name": {
+            "defaultValue": "WS-POC-pip-76df8f4b287e43a795a0cb0f073b3208",
+            "type": "String"
+        },
+        "virtualNetworks_RG_MARKETING_vnet_externalid": {
+            "defaultValue": "/subscriptions/2955c05b-e4b9-451b-b863-90ba6de96d18/resourceGroups/RG-MARKETING/providers/Microsoft.Network/virtualNetworks/RG-MARKETING-vnet",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('publicIPAddresses_LB_POC_IP_name')]",
+            "location": "southcentralus",
+            "tags": {
+                "application": "POC Medxcel.com"
+            },
+            "sku": {
+                "name": "Standard"
+            },
+            "zones": [
+                "1"
+            ],
+            "properties": {
+                "ipAddress": "20.42.112.220",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('publicIPAddresses_WS_POC_pip_76df8f4b287e43a795a0cb0f073b3208_name')]",
+            "location": "southcentralus",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "ipAddress": "52.162.98.133",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_WS_POC_name')]",
+            "location": "northcentralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_WS_POC_nic_5b28b914a2b14487ba12c9efd94d13c0_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B4ms"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "wspoc-osdisk-20200304-142213",
+                        "createOption": "Attach",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', 'wspoc-osdisk-20200304-142213')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_WS_POC_nic_5b28b914a2b14487ba12c9efd94d13c0_name'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('loadBalancers_LB_WSPOC_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_LB_POC_IP_name'))]"
+            ],
+            "tags": {
+                "application": "POC Medxcel.com"
+            },
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_LB_POC_IP_name'))]"
+                            },
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "backendAddressPools": [],
+                "loadBalancingRules": [],
+                "probes": [],
+                "inboundNatRules": [],
+                "outboundRules": [],
+                "inboundNatPools": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('networkInterfaces_WS_POC_nic_5b28b914a2b14487ba12c9efd94d13c0_name')]",
+            "location": "northcentralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_WS_POC_pip_76df8f4b287e43a795a0cb0f073b3208_name'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "b634996b5809433d83b218792e5b021e",
+                        "properties": {
+                            "privateIPAddress": "10.0.12.5",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_WS_POC_pip_76df8f4b287e43a795a0cb0f073b3208_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[concat(parameters('virtualNetworks_RG_MARKETING_vnet_externalid'), '/subnets/default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        }
+    ]
+}
