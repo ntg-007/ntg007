@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 # Define variables
-$Location          = 'SouthCentral'
+$Location          = 'South Central'
 $RGName            = "RG-Test"
 $LoadBalancerName  = "LB-Test"
 $LBFrontendName    = "DefaultFrontend"
