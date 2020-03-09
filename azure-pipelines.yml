@@ -1,0 +1,34 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# Define variables
+$Location          = 'SouthCentral'
+$RGName            = "RG-Test"
+$LoadBalancerName  = "LB-Test"
+$LBFrontendName    = "DefaultFrontend"
+$LBBackendPoolName = "BackendPoolServers"
+$LBProbeName       = "BackendHTTPProbe"
+$LBRuleName        = "DefaultLBRule"
+
+# Create a resource group for networking resources
+New-AzResourceGroup -Name $RGName -Location $Location
+
+# Create a public IP for load balancer
+#$LoadBalancerPublicIP = New-AzPublicIpAddress -ResourceGroupName $RGName -Location $Location -AllocationMethod "Static" -Name "TechTrainer-LB-ip"
+
+# Create a front-end IP configuration
+$FrontendIP = New-AzLoadBalancerFrontendIpConfig -Name $LBFrontendName -PublicIpAddress $LoadBalancerPublicIP
+
+# Create the back-end address pool
+$BackendPool = New-AzLoadBalancerBackendAddressPoolConfig -Name $LBBackendPoolName
+
+# Creates a load balancer probe on port 80
+$LoadBalancerProbe = New-AzLoadBalancerProbeConfig -Name $LBProbeName -Protocol Http -Port 80 -RequestPath / -IntervalInSeconds 360 -ProbeCount 5
+
+# Creates a load balancer rule for port 80
+$LoadBalancerRule = New-AzLoadBalancerRuleConfig -Name $LBRuleName -Protocol Tcp -Probe $LoadBalancerProbe -FrontendPort 80 -BackendPort 80 -FrontendIpConfiguration $FrontendIP -BackendAddressPool $BackendPool
+
+# Create a load balancer.
+$lb = New-AzLoadBalancer -ResourceGroupName $RGName -Name $LoadBalancerName -Location $Location -FrontendIpConfiguration $FrontendIP -BackendAddressPool $BackendPool -Probe $LoadBalancerProbe -LoadBalancingRule $LoadBalancerRule
